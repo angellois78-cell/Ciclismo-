@@ -446,8 +446,8 @@
   </div>
 
   <div class="field" id="durationField">
-    <label class="field-label">Duración estimada del entreno (horas)</label>
-    <input type="number" id="duration" value="2" min="0.5" max="8" step="0.25">
+    <label class="field-label">Duración estimada del entreno (h:mm)</label>
+    <input type="text" id="duration" placeholder="ej: 2:00 o 1:30" pattern="^\d+:[0-5]\d$" style="ime-mode:disabled;">
   </div>
 
   <!-- ADJUNTAR CAPTURA TRAINING PEAKS -->
@@ -466,6 +466,12 @@
   </div>
 
   <button class="btn btn-morning" onclick="calcMorning()">Calcular Estrategia del Día ⚡</button>
+
+  <!-- OBJETIVOS MACROS DÍA -->
+  <div id="macroDayBox" style="display:none;margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">🎯 Objetivos del día</div>
+    <div id="macroDayContent"></div>
+  </div>
 
   <!-- RESULTADO MAÑANA -->
   <div class="result" id="resultMorning">
@@ -563,8 +569,8 @@
   </div>
 
   <div class="field" id="logDurationField">
-    <label class="field-label">Duración real (horas)</label>
-    <input type="number" id="logDuration" value="2" min="0" max="10" step="0.25">
+    <label class="field-label">Duración real (h:mm)</label>
+    <input type="text" id="logDuration" placeholder="ej: 1:30 o 0:45" pattern="^\d+:[0-5]\d$" style="ime-mode:disabled;">
   </div>
 
   <div class="field" id="logTSSField">
@@ -638,6 +644,16 @@
     <span>⚡ VO2</span><span>🔵 Tempo</span><span>🟢 VT1</span><span>🏆 Comp</span><span>💥 Arrancadas</span><span>💪 Gimnasio</span><span>😴 Descanso</span>
   </div>
   <div id="calDetail" style="margin-top:16px;"></div>
+
+  <!-- Resumen semanal TSS -->
+  <div id="weeklyTSS" style="margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;"></div>
+
+  <!-- Gráfica peso -->
+  <div style="margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">⚖️ Evolución del Peso</div>
+    <canvas id="weightChart" height="120" style="width:100%;"></canvas>
+    <div id="weightChartEmpty" style="display:none;font-size:13px;color:var(--muted);text-align:center;padding:20px 0;">Registra tu peso diariamente para ver la evolución</div>
+  </div>
 </div>
 
 <footer>Elite Cycling Coach · Datos personalizados @ 2.2 g/kg · 64 kg base</footer>
@@ -652,6 +668,125 @@ function toggleDone(id) {
   btn.textContent = el.classList.contains('done') ? '✅ Completado' : '✅ Hecho';
 }
 
+// ========== MACROS ==========
+const DAILY_MACROS = {
+  vo2:       { p: 141, c: 512, f: 64 },
+  tempo:     { p: 141, c: 384, f: 77 },
+  vt1:       { p: 141, c: 256, f: 96 },
+  comp:      { p: 141, c: 512, f: 51 },
+  arrancadas:{ p: 141, c: 384, f: 64 },
+  gym:       { p: 154, c: 256, f: 77 },
+  rest:      { p: 141, c: 192, f: 96 },
+};
+const MEAL_RATIO = { breakfast: 0.25, lunch: 0.35, snack: 0.15, dinner: 0.25 };
+
+// Platos completos (macros por ración estándar)
+const DISH_DB = {
+  potaje:       { p:20, c:38, f:7,  keys:['potaje'] },
+  cocido:       { p:38, c:32, f:22, keys:['cocido'] },
+  paella:       { p:28, c:68, f:10, keys:['paella'] },
+  tortilla:     { p:14, c:9,  f:14, keys:['tortilla'] },
+  gazpacho:     { p:2,  c:8,  f:4,  keys:['gazpacho'] },
+  fabada:       { p:22, c:40, f:18, keys:['fabada'] },
+  puchero:      { p:35, c:28, f:18, keys:['puchero'] },
+  caldo:        { p:5,  c:4,  f:2,  keys:['caldo'] },
+  pizza:        { p:18, c:52, f:16, keys:['pizza'] },
+  hamburguesa:  { p:25, c:30, f:22, keys:['hamburguesa','burger'] },
+  sandwich:     { p:16, c:34, f:10, keys:['sandwich','bocadillo','bocata'] },
+  ensalada:     { p:8,  c:10, f:12, keys:['ensalada'] },
+  sopa:         { p:6,  c:18, f:3,  keys:['sopa','crema de'] },
+  revuelto:     { p:16, c:4,  f:14, keys:['revuelto'] },
+  omelette:     { p:18, c:2,  f:16, keys:['omelette'] },
+};
+
+// Ingredientes por 100g → {p, c, f, portion}
+const FOOD_DB = [
+  { k:['pollo','pechuga de pollo'],       p:31, c:0,  f:3.6, g:150 },
+  { k:['pavo'],                            p:29, c:0,  f:2,   g:150 },
+  { k:['ternera','filete','carne'],        p:26, c:0,  f:8,   g:150 },
+  { k:['cerdo','lomo'],                    p:27, c:0,  f:7,   g:150 },
+  { k:['jamón'],                           p:28, c:1,  f:5,   g:60  },
+  { k:['bacalao'],                         p:21, c:0,  f:0.3, g:130 },
+  { k:['merluza','pescado'],               p:18, c:0,  f:2,   g:150 },
+  { k:['salmón','salmon'],                 p:25, c:0,  f:13,  g:150 },
+  { k:['atún','atun'],                     p:30, c:0,  f:1,   g:100 },
+  { k:['sardina','caballa'],               p:22, c:0,  f:9,   g:100 },
+  { k:['gambas','mariscos'],               p:20, c:0,  f:1,   g:120 },
+  { k:['huevo','huevos'],                  p:13, c:1,  f:11,  g:50  },
+  { k:['queso'],                           p:25, c:1,  f:30,  g:40  },
+  { k:['yogur'],                           p:5,  c:7,  f:3.5, g:125 },
+  { k:['leche'],                           p:3.4,c:5,  f:3.5, g:200 },
+  { k:['whey','proteina','proteína'],      p:24, c:3,  f:1,   g:30  },
+  { k:['arroz'],                           p:3,  c:28, f:0.3, g:150 },
+  { k:['pasta','macarrones','fideos','espagueti','espaguetis'], p:5, c:25, f:0.9, g:180 },
+  { k:['patata','patatas'],                p:2,  c:17, f:0.1, g:200 },
+  { k:['boniato'],                         p:1.6,c:20, f:0.1, g:200 },
+  { k:['pan','tostada','tostadas'],        p:8,  c:49, f:1.5, g:60  },
+  { k:['garbanzos'],                       p:9,  c:18, f:3,   g:150 },
+  { k:['judias','judías','alubias'],       p:9,  c:22, f:0.5, g:150 },
+  { k:['lentejas'],                        p:9,  c:20, f:0.4, g:150 },
+  { k:['quinoa'],                          p:4,  c:21, f:2,   g:150 },
+  { k:['avena','cereales'],                p:17, c:66, f:7,   g:50  },
+  { k:['plátano','platano'],               p:1.1,c:23, f:0.3, g:120 },
+  { k:['manzana','pera','naranja','fruta'],p:0.5,c:12, f:0.2, g:150 },
+  { k:['miel'],                            p:0.3,c:82, f:0,   g:15  },
+  { k:['aceite'],                          p:0,  c:0,  f:100, g:10  },
+  { k:['aguacate'],                        p:2,  c:1.8,f:15,  g:100 },
+  { k:['espinaca','espinacas'],            p:3,  c:3,  f:0.4, g:80  },
+  { k:['tomate'],                          p:0.9,c:3.9,f:0.2, g:100 },
+  { k:['zanahoria'],                       p:0.9,c:10, f:0.2, g:100 },
+  { k:['frutos secos','nueces','almendras'],p:20,c:6, f:50,  g:30  },
+];
+
+function estimateMacros(text) {
+  let p = 0, c = 0, f = 0, found = [], unknown = [];
+
+  // Check for full dishes first
+  for (const dish of Object.values(DISH_DB)) {
+    if (dish.keys.some(k => text.includes(k))) {
+      p += dish.p; c += dish.c; f += dish.f;
+      found.push(dish.keys[0]);
+      return { p: Math.round(p), c: Math.round(c), f: Math.round(f), found, unknown, isDish: true };
+    }
+  }
+
+  // Check ingredients
+  const words = text.split(/[\s,+y()]+/).filter(w => w.length > 2);
+  for (const food of FOOD_DB) {
+    const match = food.k.find(k => text.includes(k));
+    if (match) {
+      const factor = food.g / 100;
+      p += food.p * factor; c += food.c * factor; f += food.f * factor;
+      found.push(match);
+    }
+  }
+
+  // Detect unrecognized words (potential foods)
+  const knownWords = FOOD_DB.flatMap(f => f.k).concat(Object.values(DISH_DB).flatMap(d => d.keys));
+  const skipWords = ['con','sin','de','la','el','los','las','un','una','y','al','a','en','poco','mucho','dos','tres','cuatro','cafe','café','solo','agua','sal','pimienta'];
+  words.forEach(w => {
+    if (!knownWords.some(k => k.includes(w) || w.includes(k)) && !skipWords.includes(w) && w.length > 3) {
+      unknown.push(w);
+    }
+  });
+
+  return { p: Math.round(p), c: Math.round(c), f: Math.round(f), found, unknown, isDish: false };
+}
+
+function macroBar(label, val, target, color) {
+  const pct = Math.min(100, Math.round((val / target) * 100));
+  const ok = pct >= 80 && pct <= 130;
+  const barColor = ok ? '#1d9e4e' : (pct < 80 ? '#c47d0a' : '#cc2222');
+  return `<div style="margin-bottom:6px;">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:2px;">
+      <span>${label}</span><span style="color:${barColor};font-weight:700;">${val}g / ${target}g</span>
+    </div>
+    <div style="background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;">
+      <div style="height:8px;width:${pct}%;background:${barColor};border-radius:4px;transition:.4s;"></div>
+    </div>
+  </div>`;
+}
+
 // ========== VALIDAR COMIDAS ==========
 function validateMeal(meal) {
   const inputs   = { breakfast: 'breakfastInput', lunch: 'lunchInput', snack: 'snackInput', dinner: 'dinnerInput' };
@@ -662,36 +797,42 @@ function validateMeal(meal) {
   if (!text) { alert('Escribe lo que has tomado primero.'); return; }
 
   const type = window._currentLunchType || 'vt1';
-  const needsCarbs = ['vo2','tempo','comp','arrancadas'].includes(type);
+  const daily = DAILY_MACROS[type] || DAILY_MACROS.vt1;
+  const ratio = MEAL_RATIO[meal];
+  const target = { p: Math.round(daily.p * ratio), c: Math.round(daily.c * ratio), f: Math.round(daily.f * ratio) };
 
-  const proteins = ['pollo','pechuga','huevo','atún','atun','salmón','salmon','merluza','ternera','jamón','jamon','lomo','cerdo','bacalao','gambas','carne','filete','sardina','caballa','queso','yogur','whey','proteína','proteina'];
-  const carbs    = ['arroz','pasta','patata','pan','lentejas','garbanzos','quinoa','macarrones','fideos','boniato','avena','cereales','plátano','platano','miel','papilla','tostada','tostadas'];
-  const veggies  = ['ensalada','lechuga','tomate','verdura','espinaca','brócoli','brocoli','calabacín','calabacin','zanahoria','pepino','pimiento','champiñón','champinon','aguacate'];
-
-  const hasProtein = proteins.some(w => text.includes(w));
-  const hasCarbs   = carbs.some(w => text.includes(w));
-  const hasVeggies = veggies.some(w => text.includes(w));
-
-  let msgs = [];
-  let ok = true;
-
-  if (meal === 'breakfast' || meal === 'lunch' || meal === 'dinner') {
-    if (!hasProtein) { msgs.push('⚠️ No veo proteína — añade huevo, whey, pollo, queso o similar.'); ok = false; }
-    if (needsCarbs && !hasCarbs) { msgs.push('⚠️ Día de carga — te faltan carbohidratos (avena, tostadas, arroz, plátano...).'); ok = false; }
-    if (meal === 'lunch' && !hasVeggies) msgs.push('💡 Intenta añadir algo de verdura o ensalada.');
-  } else {
-    // merienda — más permisiva
-    if (!hasProtein && !hasCarbs) { msgs.push('⚠️ Merienda muy pobre — añade fruta, frutos secos, batido o yogur.'); ok = false; }
-  }
-
+  const est = estimateMacros(text);
   const fb = document.getElementById(feedbacks[meal]);
-  if (ok && msgs.length === 0) {
-    fb.innerHTML = `<div style="background:#14532d22;border:1px solid #22c55e88;border-radius:10px;padding:12px;font-size:13px;color:#22c55e;">✅ ¡Perfecto! Tu ${labels[meal]} está genial para hoy.</div>`;
-  } else if (ok) {
-    fb.innerHTML = `<div style="background:#14532d22;border:1px solid #22c55e88;border-radius:10px;padding:12px;font-size:13px;color:var(--text);">✅ Válido. ${msgs.join(' ')}</div>`;
-  } else {
-    fb.innerHTML = `<div style="background:#7f1d1d22;border:1px solid #ef444488;border-radius:10px;padding:12px;font-size:13px;color:var(--text);">${msgs.join('<br>')}</div>`;
+
+  if (est.found.length === 0) {
+    // Nothing recognized
+    fb.innerHTML = `<div style="background:#7f1d1d22;border:1px solid #ef444488;border-radius:10px;padding:12px;font-size:13px;color:var(--text);">
+      ❓ No reconozco ningún alimento. Escribe los ingredientes separados por comas.<br>
+      <span style="color:var(--muted);font-size:11px;">Ej: pollo, arroz, ensalada</span>
+    </div>`;
+    return;
   }
+
+  let unknownHtml = '';
+  if (est.unknown.length > 0) {
+    unknownHtml = `<div style="font-size:11px;color:var(--muted);margin-top:6px;">❓ No reconozco: <em>${est.unknown.join(', ')}</em> — no incluido en el cálculo.</div>`;
+  }
+
+  const bars = macroBar('🥩 Proteína', est.p, target.p, '#3b6fd4')
+             + macroBar('🍚 Carbohidratos', est.c, target.c, '#c47d0a')
+             + macroBar('🥑 Grasas', est.f, target.f, '#6340c4');
+
+  const allOk = est.p >= target.p * 0.7 && est.c >= target.c * 0.7;
+  const borderColor = allOk ? '#22c55e88' : '#f59e0b88';
+  const bgColor = allOk ? '#14532d22' : '#78350f22';
+  const icon = allOk ? '✅' : '⚠️';
+
+  fb.innerHTML = `<div style="background:${bgColor};border:1px solid ${borderColor};border-radius:10px;padding:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;">${icon} Estimación para tu ${labels[meal]}</div>
+    ${bars}
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;">Objetivo ${labels[meal]} (${Math.round(ratio*100)}% del día)</div>
+    ${unknownHtml}
+  </div>`;
 }
 
 // ========== HELPERS ==========
@@ -769,8 +910,16 @@ document.getElementById('trainType').addEventListener('change', saveData);
 function getWeight() {
   return parseFloat(document.getElementById('weight').value) || 64;
 }
+function parseHHMM(val) {
+  if (!val) return 2;
+  if (val.includes(':')) {
+    const [h, m] = val.split(':').map(Number);
+    return h + (m || 0) / 60;
+  }
+  return parseFloat(val) || 2;
+}
 function getDuration() {
-  return parseFloat(document.getElementById('duration').value) || 2;
+  return parseHHMM(document.getElementById('duration').value);
 }
 
 // Ocultar campo duración y upload si es día de descanso
@@ -1226,6 +1375,30 @@ function calcMorning() {
 
   const kg = getWeight();
 
+  // Mostrar objetivos de macros del día
+  const dm = DAILY_MACROS[type] || DAILY_MACROS.vt1;
+  const macroBox = document.getElementById('macroDayBox');
+  const macroContent = document.getElementById('macroDayContent');
+  if (macroBox && macroContent) {
+    macroBox.style.display = 'block';
+    macroContent.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+          <div style="font-size:20px;font-weight:800;color:#3b6fd4;">${dm.p}g</div>
+          <div style="font-size:11px;color:var(--muted);">🥩 Proteína</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+          <div style="font-size:20px;font-weight:800;color:#c47d0a;">${dm.c}g</div>
+          <div style="font-size:11px;color:var(--muted);">🍚 Carbos</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+          <div style="font-size:20px;font-weight:800;color:#6340c4;">${dm.f}g</div>
+          <div style="font-size:11px;color:var(--muted);">🥑 Grasas</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">Valores para ${kg}kg · se reparten entre las 4 comidas</div>`;
+  }
+
   // --- DÍA DE DESCANSO ---
   if (type === 'rest') {
     const protMin = Math.round(kg * 2.2);
@@ -1671,6 +1844,7 @@ function registerDay() {
 
   const dateKey = new Date().toISOString().slice(0,10);
   const history = JSON.parse(localStorage.getItem('trainingHistory') || '{}');
+  const currentWeight = parseFloat(document.getElementById('weight').value) || null;
   history[dateKey] = {
     type,
     duration: duration || null,
@@ -1678,6 +1852,7 @@ function registerDay() {
     hr: hr || null,
     feel: feel || null,
     notes: notes || null,
+    weight: currentWeight,
     savedAt: new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}),
     tpImage: window._logTPData || null
   };
@@ -1685,6 +1860,8 @@ function registerDay() {
   window._logTPData = null;
   removeLogTP();
   renderCalendar();
+  renderWeeklyTSS();
+  renderWeightChart();
 
   document.getElementById('registerFeedback').innerHTML = `
     <div style="background:#14532d22;border:1px solid #22c55e88;border-radius:12px;padding:14px;font-size:13px;color:#22c55e;text-align:center;">
@@ -1901,7 +2078,7 @@ function showDayDetail(key) {
   const feelLabels = { '5':'💪 Muy bien', '4':'😊 Bien', '3':'😐 Regular', '2':'😓 Mal', '1':'🤒 Muy mal' };
 
   let rows = `<div style="font-size:14px;font-weight:700;color:${color};margin-bottom:12px;">${TRAIN_EMOJIS[entry.type]} ${TRAIN_NAMES[entry.type]}</div>`;
-  if (entry.duration) rows += `<div class="stat-row"><span class="stat-label">⏱ Duración</span><span class="stat-val">${entry.duration} h</span></div>`;
+  if (entry.duration) rows += `<div class="stat-row"><span class="stat-label">⏱ Duración</span><span class="stat-val">${entry.duration}</span></div>`;
   if (entry.tss)      rows += `<div class="stat-row"><span class="stat-label">📊 TSS</span><span class="stat-val accent">${entry.tss}</span></div>`;
   if (entry.hr)       rows += `<div class="stat-row"><span class="stat-label">❤️ FC media</span><span class="stat-val">${entry.hr} ppm</span></div>`;
   if (entry.feel)     rows += `<div class="stat-row"><span class="stat-label">🧠 Sensaciones</span><span class="stat-val">${feelLabels[entry.feel] || ''}</span></div>`;
@@ -1913,7 +2090,122 @@ function showDayDetail(key) {
     <div style="background:${color}22;border:1px solid ${color}55;border-radius:14px;padding:16px;">${rows}</div>`;
 }
 
+function renderWeeklyTSS() {
+  const el = document.getElementById('weeklyTSS');
+  if (!el) return;
+  const history = JSON.parse(localStorage.getItem('trainingHistory') || '{}');
+  const today = new Date();
+  let totalTSS = 0, days = [], labels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const entry = history[key];
+    const tss = entry && entry.tss ? parseInt(entry.tss) : 0;
+    totalTSS += tss;
+    days.push({ key, tss, type: entry ? entry.type : null });
+    labels.push(['L','M','X','J','V','S','D'][d.getDay() === 0 ? 6 : d.getDay() - 1]);
+  }
+  const maxTSS = Math.max(...days.map(d => d.tss), 1);
+  const bars = days.map((d, i) => {
+    const h = Math.round((d.tss / maxTSS) * 60);
+    const color = d.type ? TRAIN_COLORS[d.type] : 'var(--border)';
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;">
+      <div style="font-size:10px;color:var(--muted);">${d.tss || ''}</div>
+      <div style="width:100%;height:60px;display:flex;align-items:flex-end;">
+        <div style="width:100%;height:${h}px;background:${color};border-radius:4px 4px 0 0;min-height:${d.tss?3:0}px;transition:.3s;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);">${labels[i]}</div>
+    </div>`;
+  }).join('');
+  const avg = Math.round(totalTSS / 7);
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);">📊 TSS Semanal</div>
+      <div style="font-size:13px;color:var(--accent);font-weight:700;">Total: ${totalTSS} · Media: ${avg}/día</div>
+    </div>
+    <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>`;
+}
+
+function renderWeightChart() {
+  const history = JSON.parse(localStorage.getItem('trainingHistory') || '{}');
+  const entries = Object.entries(history)
+    .filter(([, e]) => e.weight)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-30);
+
+  const empty = document.getElementById('weightChartEmpty');
+  const canvas = document.getElementById('weightChart');
+  if (!canvas) return;
+
+  if (entries.length < 2) {
+    canvas.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  canvas.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  const weights = entries.map(([, e]) => e.weight);
+  const labels = entries.map(([k]) => k.slice(5));
+  const minW = Math.min(...weights) - 0.5;
+  const maxW = Math.max(...weights) + 0.5;
+  const W = canvas.offsetWidth || 300;
+  const H = 120;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { t: 10, b: 20, l: 30, r: 10 };
+  const chartW = W - pad.l - pad.r;
+  const chartH = H - pad.t - pad.b;
+
+  const xPos = i => pad.l + (i / (entries.length - 1)) * chartW;
+  const yPos = w => pad.t + chartH - ((w - minW) / (maxW - minW)) * chartH;
+
+  // Grid lines
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#c9bfa8';
+  ctx.lineWidth = 1;
+  [0, 0.5, 1].forEach(f => {
+    const y = pad.t + chartH * (1 - f);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    const val = (minW + (maxW - minW) * f).toFixed(1);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#6b5e4e';
+    ctx.font = '9px system-ui';
+    ctx.fillText(val, 0, y + 3);
+  });
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = '#3b6fd4';
+  ctx.lineWidth = 2;
+  entries.forEach(([, e], i) => {
+    i === 0 ? ctx.moveTo(xPos(i), yPos(e.weight)) : ctx.lineTo(xPos(i), yPos(e.weight));
+  });
+  ctx.stroke();
+
+  // Dots
+  entries.forEach(([, e], i) => {
+    ctx.beginPath();
+    ctx.arc(xPos(i), yPos(e.weight), 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#3b6fd4';
+    ctx.fill();
+  });
+
+  // X labels (every 5)
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#6b5e4e';
+  ctx.font = '9px system-ui';
+  entries.forEach(([k], i) => {
+    if (i % 5 === 0 || i === entries.length - 1) {
+      ctx.fillText(k.slice(5), xPos(i) - 8, H - 4);
+    }
+  });
+}
+
 renderCalendar();
+renderWeeklyTSS();
+renderWeightChart();
 </script>
 </body>
 </html>
