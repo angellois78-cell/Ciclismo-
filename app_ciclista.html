@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elite Cycling Coach — Angel</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2e3348;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --tag-bg: #1e2a3a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  header .logo {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .date-bar {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+  }
+
+  /* ---- PHASE CARDS ---- */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 620px;
+    margin: 0 auto 20px;
+  }
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .phase-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .phase-morning .phase-icon { background: linear-gradient(135deg,#f59e0b22,#f59e0b44); }
+  .phase-evening .phase-icon { background: linear-gradient(135deg,#4f8ef722,#7c5cfc44); }
+  .phase-title { font-size: 18px; font-weight: 700; }
+  .phase-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ---- CONTROLS ---- */
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  select:focus, input[type="number"]:focus { border-color: var(--accent); }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .2s;
+  }
+  .checkbox-field:hover { border-color: var(--warning); }
+  .checkbox-field input[type="checkbox"] {
+    width: 20px; height: 20px;
+    accent-color: var(--warning);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-field span { font-size: 14px; }
+
+  /* ---- BUTTONS ---- */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: .5px;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-morning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #000;
+    margin-top: 4px;
+  }
+  .btn-evening {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    margin-top: 4px;
+  }
+
+  /* ---- RESULT PANELS ---- */
+  .result {
+    display: none;
+    margin-top: 22px;
+    animation: fadeIn .3s ease;
+  }
+  .result.visible { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: none; } }
+
+  .result-section {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .result-section h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-label { color: var(--muted); }
+  .stat-val { font-weight: 700; font-size: 16px; color: var(--text); }
+  .stat-val.accent { color: var(--accent); }
+  .stat-val.warning { color: var(--warning); }
+  .stat-val.success { color: var(--success); }
+  .stat-val.danger { color: var(--danger); }
+
+  .tag {
+    display: inline-block;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 3px 3px 0 0;
+    color: var(--accent);
+  }
+  .tag.yellow { color: var(--warning); border-color: #f59e0b44; }
+  .tag.green { color: var(--success); border-color: #22c55e44; }
+  .tag.red { color: var(--danger); border-color: #ef444444; }
+  .tag.purple { color: #a78bfa; border-color: #a78bfa44; }
+
+  /* ---- ALERT BANNER ---- */
+  .alert {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .alert-danger { background: #ef444418; border: 1px solid #ef444444; color: var(--danger); }
+  .alert-warning { background: #f59e0b18; border: 1px solid #f59e0b44; color: var(--warning); }
+  .alert-success { background: #22c55e18; border: 1px solid #22c55e44; color: var(--success); }
+  .alert-info { background: #4f8ef718; border: 1px solid #4f8ef744; color: var(--accent); }
+  .alert-icon { font-size: 18px; line-height: 1; }
+
+  /* ---- BAND CIRCUIT ---- */
+  .exercise-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .exercise-card:last-child { margin-bottom: 0; }
+  .ex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .ex-name { font-size: 15px; font-weight: 700; }
+  .ex-band {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .band-yellow { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b55; }
+  .band-blue { background: #4f8ef722; color: #60a5fa; border: 1px solid #4f8ef755; }
+  .band-red { background: #ef444422; color: #f87171; border: 1px solid #ef444455; }
+  .ex-meta { font-size: 12px; color: var(--muted); }
+  .ex-meta span { margin-right: 14px; }
+  .ex-tempo {
+    margin-top: 8px;
+    display: inline-block;
+    background: #7c5cfc22;
+    border: 1px solid #7c5cfc44;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #a78bfa;
+    font-weight: 600;
+  }
+
+  .blocked-msg {
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    background: #ef444410;
+    border: 2px dashed #ef444444;
+  }
+  .blocked-msg .b-icon { font-size: 36px; margin-bottom: 10px; }
+  .blocked-msg h4 { color: var(--danger); font-size: 16px; margin-bottom: 6px; }
+  .blocked-msg p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+  /* ---- BIDON VISUAL ---- */
+  .bidon-grid {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .bidon {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .bidon-icon { font-size: 28px; margin-bottom: 6px; }
+  .bidon-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .bidon-val { font-size: 22px; font-weight: 800; color: var(--accent); margin: 4px 0 2px; }
+  .bidon-unit { font-size: 11px; color: var(--muted); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  /* ---- PROTEIN BAR ---- */
+  .protein-meter {
+    margin-top: 10px;
+  }
+  .meter-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .meter-track {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .6s ease;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 30px;
+    letter-spacing: 1px;
+  }
+
+  /* ---- TRAINING PEAKS UPLOAD ---- */
+  .tp-drop {
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 22px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .tp-drop:hover { border-color: var(--accent); background: #4f8ef710; }
+  .tp-drop-icon { font-size: 28px; margin-bottom: 8px; }
+  .tp-drop-text { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tp-drop-sub { font-size: 11px; color: var(--muted); }
+
+  /* ---- REST DAY ---- */
+  .rest-card {
+    background: #64748b18;
+    border: 1px solid #64748b44;
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .rest-card .rest-icon { font-size: 48px; margin-bottom: 12px; }
+  .rest-card h3 { color: var(--text); font-size: 18px; margin-bottom: 8px; }
+  .rest-card p { color: var(--muted); font-size: 13px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Elite Cycling Performance</div>
+  <h1>Training Dashboard</h1>
+  <div class="sub">Panel de Rendimiento · Ciclista Élite 47a</div>
+</header>
+<div class="date-bar" id="dateBar"></div>
+
+<!-- ============================================================
+     FASE MAÑANA
+     ============================================================ -->
+<div class="phase phase-morning">
+  <div class="phase-header">
+    <div class="phase-icon">🌅</div>
+    <div>
+      <div class="phase-title">Fase Mañana</div>
+      <div class="phase-desc">Planificar mi Día de Entrenamiento</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Peso corporal (kg)</label>
+    <input type="number" id="weight" value="64" min="40" max="100" step="0.5">
+  </div>
+
+  <div class="field">
+    <label class="field-label">Tipo de entrenamiento de hoy</label>
+    <select id="trainType">
+      <option value="">— Selecciona el entrenamiento —</option>
+      <option value="vo2">⚡ VO2 Max / Series</option>
+      <option value="tempo">🔵 Tempo / Fondo</option>
+      <option value="vt1">🟢 VT1 / Recuperación</option>
+      <option value="comp">🏆 Día de Competición</option>
+      <option value="rest">😴 Día de Descanso / Sin Entreno</option>
+    </select>
+  </div>
+
+  <div class="field" id="durationField">
+    <label class="field-label">Duración estimada del entreno (horas)</label>
+    <input type="number" id="duration" value="2" min="0.5" max="8" step="0.25">
+  </div>
+
+  <!-- ADJUNTAR CAPTURA TRAINING PEAKS -->
+  <div class="field" id="tpUploadField">
+    <label class="field-label">Captura del Entreno (TrainingPeaks)</label>
+    <div class="tp-drop" id="tpDrop" onclick="document.getElementById('tpFile').click()">
+      <input type="file" id="tpFile" accept="image/*" style="display:none" onchange="loadTPImage(event)">
+      <div class="tp-drop-icon">📸</div>
+      <div class="tp-drop-text">Toca para adjuntar la captura de TrainingPeaks</div>
+      <div class="tp-drop-sub">JPG, PNG — solo se usa localmente en tu dispositivo</div>
+    </div>
+    <div id="tpPreview" style="display:none; margin-top:10px; position:relative;">
+      <img id="tpImg" style="width:100%;border-radius:10px;border:1px solid var(--border);">
+      <button onclick="removeTPImage()" style="position:absolute;top:8px;right:8px;background:#ef4444cc;border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✕ Quitar</button>
+    </div>
+  </div>
+
+  <button class="btn btn-morning" onclick="calcMorning()">Calcular Estrategia del Día ⚡</button>
+
+  <!-- RESULTADO MAÑANA -->
+  <div class="result" id="resultMorning">
+
+    <div id="morningAlert"></div>
+
+    <!-- Desayuno pre-entreno -->
+    <div class="result-section">
+      <h3>🍳 Desayuno Pre-Entreno</h3>
+      <div id="breakfastContent"></div>
+    </div>
+
+    <!-- Estrategia de bidones -->
+    <div class="result-section">
+      <h3>🚴 Estrategia de Bidones (Intra-Entreno)</h3>
+      <div class="bidon-grid" id="bidonGrid"></div>
+      <div id="bidonNotes" style="margin-top:14px; font-size:13px; color:var(--muted); line-height:1.7;"></div>
+    </div>
+
+    <!-- Proteína diaria -->
+    <div class="result-section">
+      <h3>🥩 Suelo de Proteína Diario (2.2 g/kg)</h3>
+      <div id="proteinContent"></div>
+      <div class="protein-meter">
+        <div class="meter-label"><span>0 g</span><span id="protTarget"></span></div>
+        <div class="meter-track"><div class="meter-fill" id="protFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     FASE TARDE
+     ============================================================ -->
+<div class="phase phase-evening">
+  <div class="phase-header">
+    <div class="phase-icon">🌆</div>
+    <div>
+      <div class="phase-title">Fase Tarde</div>
+      <div class="phase-desc">Registrar Entreno Real y Recuperación</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">¿Qué entreno has completado hoy?</label>
+    <select id="actualTrain">
+      <option value="">— Selecciona el entreno realizado —</option>
+      <option value="vo2">⚡ VO2 Max / Series</option>
+      <option value="tempo">🔵 Tempo / Fondo</option>
+      <option value="vt1">🟢 VT1 / Recuperación</option>
+      <option value="comp">🏆 Competición</option>
+      <option value="rest">😴 Día de Descanso / No he entrenado</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="checkbox-field" for="sprints">
+      <input type="checkbox" id="sprints">
+      <span>⚠️ El entreno ha incluido <strong>Arrancadas de Fuerza</strong> (Sprints Max)</span>
+    </label>
+  </div>
+
+  <button class="btn btn-evening" onclick="calcEvening()">Registrar y Ver Recuperación 🌙</button>
+
+  <!-- RESULTADO TARDE -->
+  <div class="result" id="resultEvening">
+
+    <div id="eveningAlert"></div>
+
+    <!-- Recuperación nutricional -->
+    <div class="result-section">
+      <h3>🥤 Estrategia de Recuperación Post-Entreno</h3>
+      <div id="recoveryContent"></div>
+    </div>
+
+    <!-- Circuito de gomas -->
+    <div class="result-section">
+      <h3>💪 Circuito de Gomas — Esta Tarde</h3>
+      <div id="bandCircuit"></div>
+    </div>
+
+    <!-- Cena / Hipertrofia nocturna -->
+    <div class="result-section">
+      <h3>🌙 Protocolo Nocturno</h3>
+      <div id="nightProtocol"></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>Elite Cycling Coach · Datos personalizados @ 2.2 g/kg · 64 kg base</footer>
+
+<script>
+// ========== HELPERS ==========
+function today() {
+  const d = new Date();
+  const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()}`;
+}
+document.getElementById('dateBar').textContent = today();
+
+function getWeight() {
+  return parseFloat(document.getElementById('weight').value) || 64;
+}
+function getDuration() {
+  return parseFloat(document.getElementById('duration').value) || 2;
+}
+
+// Ocultar campo duración y upload si es día de descanso
+document.getElementById('trainType').addEventListener('change', function() {
+  const isRest = this.value === 'rest';
+  document.getElementById('durationField').style.display = isRest ? 'none' : 'block';
+  document.getElementById('tpUploadField').style.display = isRest ? 'none' : 'block';
+});
+
+// ========== TRAINING PEAKS IMAGE ==========
+function loadTPImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('tpImg').src = ev.target.result;
+    document.getElementById('tpPreview').style.display = 'block';
+    document.getElementById('tpDrop').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function removeTPImage() {
+  document.getElementById('tpImg').src = '';
+  document.getElementById('tpPreview').style.display = 'none';
+  document.getElementById('tpDrop').style.display = 'block';
+  document.getElementById('tpFile').value = '';
+}
+
+const TRAIN_LABELS = {
+  vo2: 'VO2 Max / Series',
+  tempo: 'Tempo / Fondo',
+  vt1: 'VT1 / Recuperación',
+  comp: 'Competición'
+};
+
+// ========== MORNING ==========
+function calcMorning() {
+  const type = document.getElementById('trainType').value;
+  if (!type) { alert('Selecciona el tipo de entrenamiento.'); return; }
+
+  const kg = getWeight();
+
+  // --- DÍA DE DESCANSO ---
+  if (type === 'rest') {
+    const protMin = Math.round(kg * 2.2);
+    document.getElementById('morningAlert').innerHTML = `<div class="alert" style="background:#64748b18;border:1px solid #64748b44;color:var(--muted)"><span class="alert-icon">😴</span><div><strong>Día de Descanso / Sin Entreno</strong> — Protocolo de mantenimiento activo. Sin bidones, sin circuito de piernas. Foco en nutrición de recuperación pasiva.</div></div>`;
+    document.getElementById('breakfastContent').innerHTML = `
+      <div class="stat-row"><span class="stat-label">Tipo de día</span><span class="stat-val" style="color:var(--muted)">Descanso completo</span></div>
+      <div class="stat-row"><span class="stat-label">Desayuno</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">Normal y saciante. Sin urgencia de timing.</span></div>
+      <div class="stat-row"><span class="stat-label">HC recomendados</span><span class="stat-val accent">${Math.round(kg * 3)} — ${Math.round(kg * 4)} g/día (mantenimiento)</span></div>
+      <div class="stat-row"><span class="stat-label">Grasas</span><span class="stat-val">Libre — día ideal para grasas saludables</span></div>
+      <div class="stat-row"><span class="stat-label">Ejemplo</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">Huevos + aguacate + tostadas integrales + fruta</span></div>
+    `;
+    document.getElementById('bidonGrid').innerHTML = `<div style="width:100%;text-align:center;padding:20px;color:var(--muted);font-size:14px;">😴 Sin bidones hoy — día de descanso</div>`;
+    document.getElementById('bidonNotes').innerHTML = `Mantén una hidratación normal (2 — 2.5 L de agua durante el día). Sin necesidad de electrolitos extra salvo calor intenso.`;
+    document.getElementById('proteinContent').innerHTML = `
+      <div class="stat-row"><span class="stat-label">Peso corporal</span><span class="stat-val">${kg} kg</span></div>
+      <div class="stat-row"><span class="stat-label">Ratio objetivo</span><span class="stat-val accent">2.2 g / kg</span></div>
+      <div class="stat-row"><span class="stat-label">Suelo diario</span><span class="stat-val warning">${protMin} g</span></div>
+      <div class="stat-row"><span class="stat-label">Nota</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">En días de descanso el músculo sigue sintetizando. No bajes del suelo de proteína.</span></div>
+    `;
+    document.getElementById('protTarget').textContent = `Objetivo: ${protMin} g`;
+    setTimeout(() => { document.getElementById('protFill').style.width = '72%'; }, 100);
+    document.getElementById('resultMorning').classList.add('visible');
+    document.getElementById('resultMorning').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const hrs = getDuration();
+  const protMin = Math.round(kg * 2.2);
+  const protMax = Math.round(kg * 2.4);
+
+  // --- Alert banner ---
+  const alertBox = document.getElementById('morningAlert');
+  const alerts = {
+    vo2: `<div class="alert alert-warning"><span class="alert-icon">⚡</span><div>Día de <strong>VO2 Max</strong> — Alta intensidad. Prioridad máxima en HC rápidos. Fuerza de piernas BLOQUEADA hoy.</div></div>`,
+    tempo: `<div class="alert alert-info"><span class="alert-icon">🔵</span><div>Día de <strong>Tempo / Fondo</strong> — HC sostenidos + alto sodio. Circuito de torso (Goma Amarilla) por la tarde.</div></div>`,
+    vt1: `<div class="alert alert-success"><span class="alert-icon">🟢</span><div>Día de <strong>Recuperación Activa</strong> — Mínima carga glucolítica. Circuito de cadera (Goma Azul) + caseína nocturna.</div></div>`,
+    comp: `<div class="alert alert-danger"><span class="alert-icon">🏆</span><div>Día de <strong>COMPETICIÓN</strong> — Superávit calórico total. Máxima ingesta de HC. Piernas en reposo absoluto post-carrera.</div></div>`,
+  };
+  alertBox.innerHTML = alerts[type];
+
+  // --- Desayuno ---
+  const breakfastData = {
+    vo2: [
+      ['Timing', '2.5 — 3h antes del inicio'],
+      ['HC objetivo (pre)', `${Math.round(kg * 2.5)} — ${Math.round(kg * 3)} g HC de índice medio`],
+      ['Ejemplo', 'Avena + plátano + miel + claras de huevo'],
+      ['Proteína pre', `${Math.round(kg * 0.3)} g (mínimo, de fácil digestión)`],
+      ['Cafeína', '3 — 5 mg/kg · 45 min antes de la salida'],
+    ],
+    tempo: [
+      ['Timing', '2 — 2.5h antes del inicio'],
+      ['HC objetivo (pre)', `${Math.round(kg * 2)} — ${Math.round(kg * 2.5)} g HC complejos`],
+      ['Ejemplo', 'Arroz blanco + aceite de oliva + pechuga + plátano'],
+      ['Sodio extra', '500 — 800 mg adicionales en el desayuno'],
+      ['Cafeína', '3 mg/kg · 45 min antes de la salida'],
+    ],
+    vt1: [
+      ['Timing', 'Normal, sin presión'],
+      ['HC objetivo (pre)', `${Math.round(kg * 1)} — ${Math.round(kg * 1.5)} g HC (moderado)`],
+      ['Ejemplo', 'Huevos revueltos + tostadas integrales + fruta'],
+      ['Nota', 'Día de recarga enzimática. No sobrecargar el sistema digestivo.'],
+    ],
+    comp: [
+      ['Timing', '3 — 3.5h antes de la salida'],
+      ['HC objetivo (pre)', `${Math.round(kg * 4)} — ${Math.round(kg * 5)} g HC totales (fase de carga)`, 'warning'],
+      ['Ejemplo', 'Arroz blanco + miel + plátano + zumo + gel 30 min antes'],
+      ['Proteína pre', 'Mínima — evitar digestión pesada'],
+      ['Cafeína', '5 mg/kg · 45 min antes + 1 gel con cafeína km 30'],
+    ],
+  };
+
+  let bHtml = '';
+  breakfastData[type].forEach(row => {
+    const cls = row[2] ? `stat-val ${row[2]}` : 'stat-val accent';
+    bHtml += `<div class="stat-row"><span class="stat-label">${row[0]}</span><span class="${cls}" style="text-align:right;max-width:60%;font-size:13px;">${row[1]}</span></div>`;
+  });
+  document.getElementById('breakfastContent').innerHTML = bHtml;
+
+  // --- Bidones ---
+  const bidonData = {
+    vo2: { b1: { label:'Bidón 1', val: Math.round(90 * hrs / 2), unit:'g HC', icon:'💧', note:'Mezcla Glucosa:Fructosa (ratio 1:0.8)' },
+           b2: { label:'Bidón 2', val: Math.round(100 * hrs / 2), unit:'g HC', icon:'⚡', note:'Gel + Maltodextrina + Fructosa' },
+           note: `Ratio Glucosa:Fructosa → <strong>1 : 0.8</strong>. Apunta a <strong>90 — 100 g/h</strong> de HC durante las series. Toma gel cada 20 min en bloques de alta intensidad. Sodio: 500 — 700 mg/h.` },
+    tempo: { b1: { label:'Bidón Hidrat.', val: Math.round(80 * hrs / 2), unit:'g HC', icon:'💧', note:'HC + Sodio elevado' },
+             b2: { label:'Bidón Energía', val: Math.round(90 * hrs / 2), unit:'g HC', icon:'🔋', note:'Maltodextrina + sal extra' },
+             note: `Objetivo: <strong>80 — 90 g/h</strong>. Sodio ALTO: <strong>800 — 1200 mg/h</strong> en verano. Bebe por calendario, no por sed. Electrolitos en ambos bidones.` },
+    vt1: { b1: { label:'Bidón Agua', val: '750', unit:'ml/h', icon:'💧', note:'Agua + electrolitos básicos' },
+           b2: { label:'Bidón Electrol.', val: '1', unit:'pastilla/h', icon:'🧂', note:'Sin HC — solo minerales' },
+           note: `Día <strong>SIN HC</strong> en bidones. Solo agua + electrolitos (sodio, magnesio, potasio). Si el entreno supera 90 min y la FC sube, añade 20 — 30 g HC como medida de emergencia.` },
+    comp: { b1: { label:'Bidón 1 Race', val: Math.round(110 * hrs / 2), unit:'g HC', icon:'🏆', note:'Máxima concentración HC' },
+            b2: { label:'Bidón 2 Race', val: Math.round(120 * hrs / 2), unit:'g HC', icon:'⚡', note:'Gel + cafeína en momentos clave' },
+            note: `COMPETICIÓN: apunta a <strong>100 — 120 g/h</strong>. Entrena el intestino. Gel cada 15 — 20 min. Cafeína estratégica en los últimos 40 min. Sodio: 1000 — 1500 mg/h si hace calor.` },
+  };
+
+  const bd = bidonData[type];
+  document.getElementById('bidonGrid').innerHTML = `
+    <div class="bidon"><div class="bidon-icon">${bd.b1.icon}</div><div class="bidon-label">${bd.b1.label}</div><div class="bidon-val">${bd.b1.val}</div><div class="bidon-unit">${bd.b1.unit}</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">${bd.b1.note}</div></div>
+    <div class="bidon"><div class="bidon-icon">${bd.b2.icon}</div><div class="bidon-label">${bd.b2.label}</div><div class="bidon-val">${bd.b2.val}</div><div class="bidon-unit">${bd.b2.unit}</div><div style="font-size:10px;color:var(--muted);margin-top:4px;">${bd.b2.note}</div></div>
+  `;
+  document.getElementById('bidonNotes').innerHTML = `ℹ️ ${bd.note}`;
+
+  // --- Proteína ---
+  document.getElementById('proteinContent').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Peso corporal</span><span class="stat-val">${kg} kg</span></div>
+    <div class="stat-row"><span class="stat-label">Ratio objetivo</span><span class="stat-val accent">2.2 g / kg</span></div>
+    <div class="stat-row"><span class="stat-label">Suelo diario (mínimo)</span><span class="stat-val warning">${protMin} g</span></div>
+    <div class="stat-row"><span class="stat-label">Óptimo diario</span><span class="stat-val success">${protMax} g</span></div>
+    <div class="stat-row"><span class="stat-label">Distribución recomendada</span><span class="stat-val" style="font-size:13px;text-align:right;">${Math.round(protMin/4)}g × 4 tomas</span></div>
+  `;
+  document.getElementById('protTarget').textContent = `Objetivo: ${protMin} — ${protMax} g`;
+  setTimeout(() => { document.getElementById('protFill').style.width = '72%'; }, 100);
+
+  document.getElementById('resultMorning').classList.add('visible');
+  document.getElementById('resultMorning').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ========== EVENING ==========
+function calcEvening() {
+  const type = document.getElementById('actualTrain').value;
+  if (!type) { alert('Selecciona el entreno que has completado.'); return; }
+
+  const kg = getWeight();
+
+  // --- DÍA DE DESCANSO TARDE ---
+  if (type === 'rest') {
+    document.getElementById('eveningAlert').innerHTML = `<div class="alert" style="background:#64748b18;border:1px solid #64748b44;color:var(--muted)"><span class="alert-icon">😴</span><div><strong>Día sin entreno</strong> — Protocolo de recuperación pasiva. Sin circuito de gomas hoy. Foco en sueño y nutrición de mantenimiento.</div></div>`;
+    document.getElementById('recoveryContent').innerHTML = `
+      <div class="stat-row"><span class="stat-label">Ingesta HC</span><span class="stat-val accent">${Math.round(kg * 3)} — ${Math.round(kg * 4)} g/día</span></div>
+      <div class="stat-row"><span class="stat-label">Proteína</span><span class="stat-val warning">${Math.round(kg * 2.2)} g mínimo (no bajar)</span></div>
+      <div class="stat-row"><span class="stat-label">Grasas</span><span class="stat-val">Libre — aguacate, frutos secos, AOVE</span></div>
+      <div class="stat-row"><span class="stat-label">Hidratación</span><span class="stat-val">2 — 2.5 L agua durante el día</span></div>
+    `;
+    document.getElementById('bandCircuit').innerHTML = `<div class="rest-card"><div class="rest-icon">🛋️</div><h3>Sin Circuito Hoy</h3><p>Día de descanso completo. El cuerpo adapta y supracompensa en reposo.<br><br>Si quieres hacer algo, 10 min de movilidad articular suave (sin gomas) o foam roller en cuádriceps y glúteos.</p></div>`;
+    document.getElementById('nightProtocol').innerHTML = `
+      <div class="stat-row"><span class="stat-label">🌙 Antes de dormir</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">${Math.round(kg * 0.4)} g Caseína Micelar</span></div>
+      <div class="stat-row"><span class="stat-label">💊 Suplementos</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">Magnesio 400mg + Zinc 15mg + Omega-3 2g</span></div>
+      <div class="stat-row"><span class="stat-label">🛌 Sueño</span><span class="stat-val success">8 — 9h · Noche de recuperación máxima</span></div>
+      <div class="stat-row"><span class="stat-label">📌 Nota</span><span class="stat-val" style="font-size:13px;text-align:right;max-width:60%;">La GH nocturna trabaja al máximo en días sin carga. No comprimas el sueño.</span></div>
+    `;
+    document.getElementById('resultEvening').classList.add('visible');
+    document.getElementById('resultEvening').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  const sprints = document.getElementById('sprints').checked;
+  const legsBlocked = (type === 'vo2' || type === 'comp' || sprints);
+
+  // Alert
+  const alertBox = document.getElementById('eveningAlert');
+  if (legsBlocked) {
+    const reasons = [];
+    if (type === 'vo2') reasons.push('VO2 Max');
+    if (type === 'comp') reasons.push('Competición');
+    if (sprints) reasons.push('Arrancadas de Fuerza');
+    alertBox.innerHTML = `<div class="alert alert-danger"><span class="alert-icon">🚫</span><div><strong>PIERNAS BLOQUEADAS</strong> — Motivo: ${reasons.join(' + ')}. Las piernas necesitan recuperación completa. El circuito de cadera (Goma Azul) queda CANCELADO hoy.</div></div>`;
+  } else {
+    alertBox.innerHTML = `<div class="alert alert-success"><span class="alert-icon">✅</span><div>Circuito de gomas habilitado según protocolo de hoy. Ejecuta los ejercicios con tempo controlado.</div></div>`;
+  }
+
+  // --- Recuperación nutricional ---
+  const postProt = Math.round(kg * 0.5);
+  const postHc = Math.round(kg * 1);
+
+  const recoveryData = {
+    vo2: {
+      title: 'Ventana Anabólica Inmediata (0 — 30 min)',
+      items: [
+        ['⏱ Timing', 'Máximo 30 min post-esfuerzo'],
+        ['🥤 Batido inmediato', `${postProt} g Proteína Whey + ${postHc} g HC (0.5 g/kg + 1 g/kg)`, 'warning'],
+        ['🍌 Ejemplo práctico', `Shake: ${postProt}g whey + ${postHc}g dextrosa/glucosa + plátano`],
+        ['💊 Extras', 'Creatina 5g + L-Glutamina 5g (opcional)'],
+        ['🍽 Comida 1h después', `Arroz + pollo + verduras. Proteína total: ${Math.round(postProt * 1.5)} g`],
+      ]
+    },
+    tempo: {
+      title: 'Recarga Glucogénica (0 — 45 min)',
+      items: [
+        ['⏱ Timing', '< 45 min post-esfuerzo'],
+        ['🍚 Comida sólida', `${Math.round(kg * 1.5)} — ${Math.round(kg * 2)} g HC complejos + proteína magra`, 'accent'],
+        ['🐔 Proteína', `${postProt} — ${Math.round(postProt * 1.2)} g (pechuga, merluza, huevos)`],
+        ['🧂 Sodio', '800 — 1200 mg de reposición (verano)'],
+        ['Ejemplo', 'Arroz blanco 200g + 150g pechuga + aceite + aguacate'],
+      ]
+    },
+    vt1: {
+      title: 'Recuperación Metabólica Suave',
+      items: [
+        ['⏱ Timing', 'Sin urgencia — ventana amplia'],
+        ['🥗 Comida', `HC moderados + ${postProt} g proteína + grasas saludables`],
+        ['🌙 Foco principal', 'CENA — Proteína lenta para hipertrofia nocturna'],
+        ['💪 Hipertrofia nocturna', `${Math.round(kg * 0.4)} — ${Math.round(kg * 0.5)} g Caseína antes de dormir`, 'purple'],
+        ['Ejemplo cena', 'Queso cottage + caseína + frutos secos + arándanos'],
+      ]
+    },
+    comp: {
+      title: 'Superávit Calórico Post-Carrera (FORZADO)',
+      items: [
+        ['⏱ Timing', 'Inmediato — dentro de los 20 min post-meta'],
+        ['🥤 Batido denso', `${Math.round(postProt * 1.2)} g Whey + ${Math.round(postHc * 1.5)} g HC + Crema Cacahuete`, 'warning'],
+        ['🥜 Crema cacahuete', '2 — 3 cucharadas (30 — 45 g) = densidad calórica alta'],
+        ['🍕 Comida 1h', 'Superávit calórico: pasta/arroz + proteína + grasas saludables'],
+        ['🌙 Antes de dormir', `${Math.round(kg * 0.5)} g Caseína + avena + miel`],
+        ['⚡ Objetivo', `+500 — 800 kcal sobre mantenimiento`, 'danger'],
+      ]
+    },
+  };
+
+  const rd = recoveryData[type];
+  let rHtml = `<div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">${rd.title}</div>`;
+  rd.items.forEach(row => {
+    const cls = row[2] ? `stat-val ${row[2]}` : 'stat-val';
+    rHtml += `<div class="stat-row"><span class="stat-label">${row[0]}</span><span class="${cls}" style="text-align:right;max-width:65%;font-size:13px;">${row[1]}</span></div>`;
+  });
+  document.getElementById('recoveryContent').innerHTML = rHtml;
+
+  // --- Circuito de Gomas ---
+  const torsoExercises = [
+    { name: 'Press Horizontal (Goma Pecho)', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '12', rest: '60s', tempo: '1-0-3' },
+    { name: 'Remo Bajo Bilateral', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '15', rest: '60s', tempo: '1-0-3' },
+    { name: 'Press Arnold (Hombros)', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '12', rest: '60s', tempo: '1-0-3' },
+    { name: 'Face Pull (Deltoides Post.)', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '15', rest: '45s', tempo: '1-0-3' },
+    { name: 'Curl Bíceps Alterno', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '12', rest: '45s', tempo: '1-0-3' },
+    { name: 'Extensión Tríceps Overhead', band: 'Amarilla', bandClass: 'band-yellow', sets: '3', reps: '15', rest: '45s', tempo: '1-0-3' },
+  ];
+
+  const hipExercises = [
+    { name: 'Abducción de Cadera (Lateral)', band: 'Azul', bandClass: 'band-blue', sets: '3', reps: '20', rest: '45s', tempo: '1-0-2' },
+    { name: 'Clamshell (Glúteo Medio)', band: 'Azul', bandClass: 'band-blue', sets: '3', reps: '15/lado', rest: '45s', tempo: '1-1-2' },
+    { name: 'Hip Thrust Isométrico', band: 'Azul', bandClass: 'band-blue', sets: '3', reps: '12 (3s hold)', rest: '60s', tempo: 'Iso' },
+    { name: 'Sentadilla Sumo (Estabilidad)', band: 'Azul', bandClass: 'band-blue', sets: '3', reps: '15', rest: '60s', tempo: '2-0-2' },
+  ];
+
+  function renderExercise(ex) {
+    const tempoHtml = ex.tempo !== 'Iso'
+      ? `<span class="ex-tempo">Tempo ${ex.tempo} — Excéntrico lento</span>`
+      : `<span class="ex-tempo">Contracción Isométrica</span>`;
+    return `
+      <div class="exercise-card">
+        <div class="ex-header">
+          <span class="ex-name">${ex.name}</span>
+          <span class="ex-band ${ex.bandClass}">Goma ${ex.band}</span>
+        </div>
+        <div class="ex-meta">
+          <span>📦 ${ex.sets} series</span>
+          <span>🔁 ${ex.reps} reps</span>
+          <span>⏸ ${ex.rest} descanso</span>
+        </div>
+        ${tempoHtml}
+      </div>`;
+  }
+
+  let circuitHtml = '';
+
+  if (type === 'tempo') {
+    // Solo torso
+    circuitHtml += `<div style="margin-bottom:12px;" class="tag yellow">🟡 Goma Amarilla — Torso Completo</div><br><br>`;
+    torsoExercises.forEach(ex => { circuitHtml += renderExercise(ex); });
+    if (legsBlocked) {
+      circuitHtml += `<div class="blocked-msg" style="margin-top:10px;"><div class="b-icon">🚫</div><h4>Piernas Bloqueadas</h4><p>Aunque el entreno fue Tempo, las <strong>Arrancadas de Fuerza</strong> activan la restricción. Goma Azul cancelada hoy.</p></div>`;
+    }
+  } else if (type === 'vt1' && !legsBlocked) {
+    // Torso + Cadera
+    circuitHtml += `<div style="margin-bottom:12px;"><span class="tag yellow">🟡 Bloque A — Torso (Goma Amarilla)</span></div><br><br>`;
+    [torsoExercises[0], torsoExercises[1], torsoExercises[3]].forEach(ex => { circuitHtml += renderExercise(ex); });
+    circuitHtml += `<div class="divider"></div><div style="margin-bottom:12px;"><span class="tag" style="color:#60a5fa;border-color:#4f8ef755;">🔵 Bloque B — Cadera/Estabilidad (Goma Azul)</span></div><br><br>`;
+    hipExercises.forEach(ex => { circuitHtml += renderExercise(ex); });
+  } else if (legsBlocked) {
+    // Piernas bloqueadas — solo torso si no es comp ni vo2
+    if (type === 'vo2' || type === 'comp') {
+      circuitHtml = `<div class="blocked-msg"><div class="b-icon">🚫</div><h4>Circuito de Piernas BLOQUEADO</h4><p>Entreno de <strong>${TRAIN_LABELS[type]}</strong> — Las piernas necesitan recuperación completa hoy.<br><br>Si quieres hacer algo, límitate a movilidad de cadera suave (sin goma) durante 10 min.</p></div>`;
+      if (type === 'vo2') {
+        circuitHtml += `<div style="margin-top:14px;"><div style="margin-bottom:12px;" class="tag yellow">🟡 Opcional — Torso Ligero (baja intensidad)</div><br><br>`;
+        [torsoExercises[0], torsoExercises[1]].forEach(ex => { circuitHtml += renderExercise(ex); });
+        circuitHtml += '</div>';
+      }
+    } else {
+      circuitHtml += `<div class="blocked-msg"><div class="b-icon">🚫</div><h4>Goma Azul BLOQUEADA por Arrancadas</h4><p>Las <strong>Arrancadas de Fuerza</strong> generan estrés neuromuscular en piernas. Circuito de cadera cancelado.<br><br>Solo torso hoy:</p></div>`;
+      circuitHtml += `<div style="margin-top:14px;">`;
+      torsoExercises.forEach(ex => { circuitHtml += renderExercise(ex); });
+      circuitHtml += '</div>';
+    }
+  } else {
+    circuitHtml = `<div style="color:var(--muted);font-size:14px;text-align:center;padding:20px;">Selecciona un tipo de entreno para ver el circuito personalizado.</div>`;
+  }
+
+  document.getElementById('bandCircuit').innerHTML = circuitHtml;
+
+  // --- Protocolo Nocturno ---
+  const nightData = {
+    vo2: [
+      ['🌙 Antes de dormir (22h)', `${Math.round(kg * 0.4)} g Caseína Micelar + 30 g avena lenta`],
+      ['💊 Suplementos noche', 'Magnesio 300mg + Zinc 15mg + Omega-3 2g'],
+      ['🛌 Sueño objetivo', '8 — 9 horas. GH endógena máxima en recuperación.'],
+      ['❄️ Frío', 'Ducha fría 3 min post-entreno si es posible (vasoconstricción)'],
+    ],
+    tempo: [
+      ['🌙 Cena (21h)', `HC complejos ${Math.round(kg * 1)} g + ${Math.round(kg * 0.35)} g proteína magra`],
+      ['Antes de dormir', `${Math.round(kg * 0.3)} g Caseína (opcional si cena fue abundante)`],
+      ['💊 Suplementos noche', 'Magnesio 300mg + Vitamina D3 2000 UI'],
+      ['🛌 Sueño objetivo', '7 — 8 horas. Enfoque en recarga glucogénica hepática.'],
+    ],
+    vt1: [
+      ['🌙 Foco principal: CENA', `${Math.round(kg * 0.5)} g Proteína total en cena (HIPERTROFIA NOCTURNA)`],
+      ['🥛 Caseína micelar', `${Math.round(kg * 0.4)} g antes de dormir (digestión lenta 7h)`, 'purple'],
+      ['Ejemplo', 'Queso cottage 200g + batido de caseína + nueces + arándanos'],
+      ['💊 Suplementos noche', 'Magnesio 400mg + Colágeno hidrolizado 15g'],
+      ['🛌 Sueño objetivo', '8 horas. Noche de síntesis proteica máxima (día de bajo volumen).'],
+    ],
+    comp: [
+      ['🌙 Superávit nocturno', `+${Math.round(kg * 8)} kcal sobre mantenimiento estimado`, 'danger'],
+      ['Antes de dormir', `${Math.round(kg * 0.5)} g Caseína + Avena 60g + Miel 20g`],
+      ['🥜 Crema cacahuete', '30 g con la toma nocturna (HC lentos + grasas)'],
+      ['💊 Suplementos', 'Magnesio 400mg + Zinc 20mg + Vitamina C 1g (antioxidante)'],
+      ['🛌 Prioridad máxima', '9 horas de sueño. Recovery total post-competición.'],
+    ],
+  };
+
+  let nHtml = '';
+  nightData[type].forEach(row => {
+    const cls = row[2] ? `stat-val ${row[2]}` : 'stat-val';
+    nHtml += `<div class="stat-row"><span class="stat-label">${row[0]}</span><span class="${cls}" style="text-align:right;max-width:65%;font-size:13px;">${row[1]}</span></div>`;
+  });
+  document.getElementById('nightProtocol').innerHTML = nHtml;
+
+  document.getElementById('resultEvening').classList.add('visible');
+  document.getElementById('resultEvening').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
