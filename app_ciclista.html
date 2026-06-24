@@ -540,6 +540,36 @@ function today() {
 }
 document.getElementById('dateBar').textContent = today();
 
+// ========== MEMORIA LOCAL ==========
+function saveData() {
+  localStorage.setItem('peso', document.getElementById('weight').value);
+  localStorage.setItem('duracion', document.getElementById('duration').value);
+  localStorage.setItem('ultimoEntrenamiento', document.getElementById('trainType').value);
+}
+
+function loadData() {
+  const peso = localStorage.getItem('peso');
+  const duracion = localStorage.getItem('duracion');
+  const ultimoEnt = localStorage.getItem('ultimoEntrenamiento');
+  if (peso) document.getElementById('weight').value = peso;
+  if (duracion) document.getElementById('duration').value = duracion;
+  if (ultimoEnt) {
+    document.getElementById('trainType').value = ultimoEnt;
+    document.getElementById('actualTrain').value = ultimoEnt;
+    if (ultimoEnt === 'rest') {
+      document.getElementById('durationField').style.display = 'none';
+      document.getElementById('tpUploadField').style.display = 'none';
+    }
+  }
+}
+
+loadData();
+
+// Guardar automáticamente cuando cambian los campos
+document.getElementById('weight').addEventListener('change', saveData);
+document.getElementById('duration').addEventListener('change', saveData);
+document.getElementById('trainType').addEventListener('change', saveData);
+
 function getWeight() {
   return parseFloat(document.getElementById('weight').value) || 64;
 }
