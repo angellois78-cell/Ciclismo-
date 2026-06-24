@@ -845,6 +845,7 @@ function validateMeal(meal) {
   if (est.found.length > 0) {
     window._mealMacros[meal] = { p: est.p, c: est.c, f: est.f };
     updateMacroTotal(type);
+    saveDayInputs();
   }
 }
 
@@ -917,6 +918,8 @@ function saveDayInputs() {
   });
   const feel = document.getElementById('logFeel');
   if (feel) day['logFeel'] = feel.value;
+  if (window._mealMacros) day['_mealMacros'] = window._mealMacros;
+  if (window._currentLunchType) day['_trainType'] = window._currentLunchType;
   localStorage.setItem('dayInputs_' + _todayKey, JSON.stringify(day));
 }
 
@@ -929,6 +932,36 @@ function loadDayInputs() {
   if (day['logFeel']) {
     const feel = document.getElementById('logFeel');
     if (feel) feel.value = day['logFeel'];
+  }
+  if (day['_mealMacros']) {
+    window._mealMacros = day['_mealMacros'];
+    const type = day['_trainType'] || 'vt1';
+    window._currentLunchType = type;
+    updateMacroTotal(type);
+    // Mostrar caja de objetivos si hay datos
+    const dm = DAILY_MACROS[type] || DAILY_MACROS.vt1;
+    const box = document.getElementById('macroDayBox');
+    const content = document.getElementById('macroDayContent');
+    if (box && content) {
+      box.style.display = 'block';
+      const kg = getWeight();
+      content.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+          <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+            <div style="font-size:20px;font-weight:800;color:#3b6fd4;">${dm.p}g</div>
+            <div style="font-size:11px;color:var(--muted);">🥩 Proteína</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+            <div style="font-size:20px;font-weight:800;color:#c47d0a;">${dm.c}g</div>
+            <div style="font-size:11px;color:var(--muted);">🍚 Carbos</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:10px;">
+            <div style="font-size:20px;font-weight:800;color:#6340c4;">${dm.f}g</div>
+            <div style="font-size:11px;color:var(--muted);">🥑 Grasas</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;">Valores para ${kg}kg · se reparten entre las 4 comidas</div>`;
+    }
   }
 }
 
@@ -994,6 +1027,11 @@ function updateLogFields() {
   document.getElementById('logHRField').style.display = (isRest || !val) ? 'none' : 'block';
   document.getElementById('logTPField').style.display = (noBike || !val) ? 'none' : 'block';
   document.getElementById('registerFeedback').innerHTML = '';
+  // TSS automático para gimnasio
+  if (val === 'gym') {
+    const tssEl = document.getElementById('logTSS');
+    if (tssEl && !tssEl.value) tssEl.value = '50';
+  }
 }
 document.getElementById('actualTrain').addEventListener('change', updateLogFields);
 updateLogFields();
@@ -1479,7 +1517,6 @@ function calcMorning() {
       </div>
       <div style="font-size:12px;color:var(--muted);background:var(--surface);padding:8px 12px;border-radius:8px;">Día de descanso — desayuno sin prisas. Sin necesidad de carga rápida de HC.</div>
     `;
-    document.getElementById('breakfastInput').value = '';
     document.getElementById('breakfastFeedback').innerHTML = '';
     document.getElementById('sec-bidon').style.display = 'none';
     // Cena descanso
@@ -1509,9 +1546,7 @@ function calcMorning() {
       </div>
       <div style="font-size:12px;color:var(--muted);background:var(--surface);padding:8px 12px;border-radius:8px;">Día de descanso — menos HC que en días de entreno. Prioriza proteína y verdura.</div>
     `;
-    document.getElementById('lunchInput').value = '';
     document.getElementById('lunchFeedback').innerHTML = '';
-    document.getElementById('snackInput').value = '';
     document.getElementById('snackFeedback').innerHTML = '';
     document.getElementById('snackContent').innerHTML = `
       <div style="margin-bottom:16px;">
@@ -1598,7 +1633,6 @@ function calcMorning() {
     </div>
     <div style="font-size:12px;color:var(--muted);background:var(--surface);padding:8px 12px;border-radius:8px;">${bd2.nota}</div>
   `;
-  document.getElementById('breakfastInput').value = '';
   document.getElementById('breakfastFeedback').innerHTML = '';
 
   // --- Bidones ---
@@ -1682,7 +1716,6 @@ function calcMorning() {
     </div>
     <div style="font-size:12px;color:var(--muted);background:var(--surface);padding:8px 12px;border-radius:8px;">${ld.nota}</div>
   `;
-  document.getElementById('lunchInput').value = '';
   document.getElementById('lunchFeedback').innerHTML = '';
   window._currentLunchType = type;
 
