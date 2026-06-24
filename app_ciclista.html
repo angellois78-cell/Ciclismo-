@@ -756,14 +756,34 @@ function estimateMacros(text) {
     }
   }
 
-  // Check ingredients
-  const words = text.split(/[\s,+y()]+/).filter(w => w.length > 2);
+  // Check ingredients with optional quantity prefix
+  // Supports: "2 huevos", "3 tostadas", "dos huevos", "media patata"
+  const numWords = { 'un':1,'una':1,'dos':2,'tres':3,'cuatro':4,'cinco':5,'medio':0.5,'media':0.5 };
   for (const food of FOOD_DB) {
     const match = food.k.find(k => text.includes(k));
     if (match) {
-      const factor = food.g / 100;
+      // Look for a number or word-number before the ingredient
+      const idx = text.indexOf(match);
+      const before = text.slice(Math.max(0, idx - 15), idx).trim();
+      let qty = 1;
+      const numMatch = before.match(/(\d+(?:[.,]\d+)?)\s*$/);
+      if (numMatch) {
+        qty = parseFloat(numMatch[1].replace(',', '.'));
+      } else {
+        for (const [word, val] of Object.entries(numWords)) {
+          if (before.endsWith(word) || before.includes(word + ' ')) { qty = val; break; }
+        }
+      }
+      // Also check for grams: "150g arroz" or "arroz 150g"
+      const gMatch = text.slice(Math.max(0, idx-10), idx+match.length+10).match(/(\d+)\s*g/);
+      let factor;
+      if (gMatch) {
+        factor = parseInt(gMatch[1]) / 100;
+      } else {
+        factor = (food.g * qty) / 100;
+      }
       p += food.p * factor; c += food.c * factor; f += food.f * factor;
-      found.push(match);
+      found.push(qty > 1 ? `${qty}x ${match}` : match);
     }
   }
 
