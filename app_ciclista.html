@@ -980,6 +980,11 @@ function loadData() {
     }
   }
   loadDayInputs();
+  // Si ya calculó la estrategia hoy, recalcular automáticamente
+  const savedCalc = localStorage.getItem('calcDay_' + new Date().toISOString().slice(0,10));
+  if (savedCalc && document.getElementById('trainType').value) {
+    calcMorning();
+  }
 }
 
 // Auto-guardar al escribir
@@ -1466,6 +1471,8 @@ function buildCircuit(type) {
 function calcMorning() {
   const type = document.getElementById('trainType').value;
   if (!type) { alert('Selecciona el tipo de entrenamiento.'); return; }
+
+  localStorage.setItem('calcDay_' + new Date().toISOString().slice(0,10), '1');
 
   const kg = getWeight();
 
