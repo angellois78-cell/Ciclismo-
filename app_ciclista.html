@@ -473,6 +473,12 @@
     <div id="macroDayContent"></div>
   </div>
 
+  <!-- ACUMULADOR MACROS DÍA -->
+  <div id="macroTotalBox" style="display:none;margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📈 Lo que llevas hoy</div>
+    <div id="macroTotalContent"></div>
+  </div>
+
   <!-- RESULTADO MAÑANA -->
   <div class="result" id="resultMorning">
 
@@ -803,6 +809,7 @@ function validateMeal(meal) {
 
   const est = estimateMacros(text);
   const fb = document.getElementById(feedbacks[meal]);
+  if (!window._mealMacros) window._mealMacros = {};
 
   if (est.found.length === 0) {
     // Nothing recognized
@@ -833,6 +840,55 @@ function validateMeal(meal) {
     <div style="font-size:10px;color:var(--muted);margin-top:4px;">Objetivo ${labels[meal]} (${Math.round(ratio*100)}% del día)</div>
     ${unknownHtml}
   </div>`;
+
+  // Guardar macros de esta comida y actualizar total
+  if (est.found.length > 0) {
+    window._mealMacros[meal] = { p: est.p, c: est.c, f: est.f };
+    updateMacroTotal(type);
+  }
+}
+
+function updateMacroTotal(type) {
+  const box = document.getElementById('macroTotalBox');
+  const content = document.getElementById('macroTotalContent');
+  if (!box || !content) return;
+
+  const dm = DAILY_MACROS[type] || DAILY_MACROS.vt1;
+  const meals = window._mealMacros || {};
+  const totalP = Object.values(meals).reduce((s, m) => s + m.p, 0);
+  const totalC = Object.values(meals).reduce((s, m) => s + m.c, 0);
+  const totalF = Object.values(meals).reduce((s, m) => s + m.f, 0);
+  const remP = Math.max(0, dm.p - totalP);
+  const remC = Math.max(0, dm.c - totalC);
+  const remF = Math.max(0, dm.f - totalF);
+
+  const mealNames = { breakfast:'Desayuno', lunch:'Comida', snack:'Merienda', dinner:'Cena' };
+  const counted = Object.keys(meals).map(m => mealNames[m]).join(', ');
+
+  const pctP = Math.min(100, Math.round((totalP / dm.p) * 100));
+  const pctC = Math.min(100, Math.round((totalC / dm.c) * 100));
+  const pctF = Math.min(100, Math.round((totalF / dm.f) * 100));
+
+  function bar(label, total, rem, target, pct, color) {
+    const ok = pct >= 90;
+    const c = ok ? '#1d9e4e' : color;
+    return `<div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:2px;">
+        <span>${label}</span>
+        <span style="color:${c};font-weight:700;">${total}g comido · ${rem}g restante</span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:10px;overflow:hidden;">
+        <div style="height:10px;width:${pct}%;background:${c};border-radius:4px;transition:.4s;"></div>
+      </div>
+    </div>`;
+  }
+
+  box.style.display = 'block';
+  content.innerHTML = `
+    ${bar('🥩 Proteína', totalP, remP, dm.p, pctP, '#3b6fd4')}
+    ${bar('🍚 Carbohidratos', totalC, remC, dm.c, pctC, '#c47d0a')}
+    ${bar('🥑 Grasas', totalF, remF, dm.f, pctF, '#6340c4')}
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;">Contando: ${counted}</div>`;
 }
 
 // ========== HELPERS ==========
