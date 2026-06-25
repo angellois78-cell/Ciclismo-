@@ -1001,10 +1001,12 @@ function loadData() {
   }
   loadDayInputs();
   // Si ya calculó la estrategia hoy, recalcular automáticamente
-  const savedCalc = localStorage.getItem('calcDay_' + new Date().toISOString().slice(0,10));
-  if (savedCalc && document.getElementById('trainType').value) {
-    calcMorning();
-  }
+  try {
+    const savedCalc = localStorage.getItem('calcDay_' + new Date().toISOString().slice(0,10));
+    if (savedCalc && document.getElementById('trainType').value) {
+      calcMorning();
+    }
+  } catch(e) { console.warn('Auto-calc error:', e); }
 }
 
 // Auto-guardar al escribir
@@ -1489,6 +1491,7 @@ function buildCircuit(type) {
 
 // ========== MORNING ==========
 function calcMorning() {
+  try {
   const type = document.getElementById('trainType').value;
   if (!type) { alert('Selecciona el tipo de entrenamiento.'); return; }
 
@@ -1987,6 +1990,7 @@ function registerDay() {
 
   // Scroll to calendar
   setTimeout(() => document.querySelector('.phase:last-of-type').scrollIntoView({ behavior:'smooth', block:'start' }), 600);
+  } catch(e) { console.error('calcMorning error:', e); alert('Error: ' + e.message); }
 }
 
 // ========== EVENING (legacy — kept for band circuit in planning) ==========
