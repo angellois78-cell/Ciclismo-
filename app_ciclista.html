@@ -1990,7 +1990,11 @@ function registerDay() {
 
   // Scroll to calendar
   setTimeout(() => document.querySelector('.phase:last-of-type').scrollIntoView({ behavior:'smooth', block:'start' }), 600);
-  } catch(e) { console.error('calcMorning error:', e); alert('Error: ' + e.message); }
+  } catch(e) {
+    console.error('calcMorning error:', e);
+    const rb = document.getElementById('resultMorning');
+    if (rb) { rb.classList.add('visible'); rb.innerHTML = `<div style="background:#7f1d1d22;border:1px solid #ef444488;border-radius:12px;padding:16px;color:#ef4444;font-size:13px;">❌ Error: ${e.message}</div>`; }
+  }
 }
 
 // ========== EVENING (legacy — kept for band circuit in planning) ==========
