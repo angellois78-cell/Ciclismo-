@@ -561,8 +561,13 @@
     <div class="phase-icon">🌆</div>
     <div>
       <div class="phase-title">Registro Entrenamiento</div>
-      <div class="phase-desc">Anota lo que has hecho hoy</div>
+      <div class="phase-desc">Anota lo que has hecho</div>
     </div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Fecha del registro</label>
+    <input type="date" id="logDate" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:14px;">
   </div>
 
   <div class="field">
@@ -1027,6 +1032,7 @@ function loadData() {
 document.getElementById('logFeel').addEventListener('change', saveDayInputs);
 
 loadData();
+document.getElementById('logDate').value = new Date().toISOString().slice(0,10);
 
 // Guardar automáticamente cuando cambian los campos
 document.getElementById('weight').addEventListener('change', saveData);
@@ -1976,7 +1982,7 @@ function registerDay() {
   const feelLabels = { '5':'💪 Muy bien', '4':'😊 Bien', '3':'😐 Regular', '2':'😓 Mal', '1':'🤒 Muy mal' };
   const notes    = document.getElementById('logNotes').value.trim();
 
-  const dateKey = new Date().toISOString().slice(0,10);
+  const dateKey = document.getElementById('logDate').value || new Date().toISOString().slice(0,10);
   const history = JSON.parse(localStorage.getItem('trainingHistory') || '{}');
   const currentWeight = parseFloat(document.getElementById('weight').value) || null;
   history[dateKey] = {
