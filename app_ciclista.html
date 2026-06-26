@@ -723,7 +723,7 @@ const DISH_DB = {
 const FOOD_DB = [
   { k:['pollo','pechuga de pollo'],       p:31, c:0,  f:3.6, g:150 },
   { k:['pavo'],                            p:29, c:0,  f:2,   g:150 },
-  { k:['ternera','filete','carne'],        p:26, c:0,  f:8,   g:150 },
+  { k:['ternera','filete de ternera','carne'],p:26, c:0, f:8,  g:150 },
   { k:['cerdo','lomo'],                    p:27, c:0,  f:7,   g:150 },
   { k:['jamón'],                           p:28, c:1,  f:5,   g:60  },
   { k:['bacalao'],                         p:21, c:0,  f:0.3, g:130 },
@@ -761,43 +761,52 @@ const FOOD_DB = [
 function estimateMacros(text) {
   let p = 0, c = 0, f = 0, found = [], unknown = [];
 
-  // Check for full dishes first
-  for (const dish of Object.values(DISH_DB)) {
-    if (dish.keys.some(k => text.includes(k))) {
-      p += dish.p; c += dish.c; f += dish.f;
-      found.push(dish.keys[0]);
-      return { p: Math.round(p), c: Math.round(c), f: Math.round(f), found, unknown, isDish: true };
-    }
-  }
-
-  // Check ingredients with optional quantity prefix
-  // Supports: "2 huevos", "3 tostadas", "dos huevos", "media patata"
+  // Split by comma/semicolon to process each item independently
+  const items = text.split(/[,;]+/).map(s => s.trim()).filter(s => s.length > 0);
   const numWords = { 'un':1,'una':1,'dos':2,'tres':3,'cuatro':4,'cinco':5,'medio':0.5,'media':0.5 };
-  for (const food of FOOD_DB) {
-    const match = food.k.find(k => text.includes(k));
-    if (match) {
-      // Look for a number or word-number before the ingredient
-      const idx = text.indexOf(match);
-      const before = text.slice(Math.max(0, idx - 25), idx).trim();
-      let qty = 1;
-      const numMatch = before.match(/(\d+(?:[.,]\d+)?)\s*$/);
-      if (numMatch) {
-        qty = parseFloat(numMatch[1].replace(',', '.'));
-      } else {
-        for (const [word, val] of Object.entries(numWords)) {
-          if (before.endsWith(word) || before.includes(word + ' ') || before.startsWith(word + ' ')) { qty = val; break; }
+
+  for (const item of items) {
+    // Try individual ingredients first
+    const usedRanges = [];
+    let itemFound = false;
+    for (const food of FOOD_DB) {
+      const match = food.k.find(k => item.includes(k));
+      if (match) {
+        const idx = item.indexOf(match);
+        if (usedRanges.some(([s, e]) => idx < e && idx + match.length > s)) continue;
+        usedRanges.push([idx, idx + match.length]);
+        itemFound = true;
+        const before = item.slice(Math.max(0, idx - 25), idx).trim();
+        let qty = 1;
+        const numMatch = before.match(/(\d+(?:[.,]\d+)?)\s*$/);
+        if (numMatch) {
+          qty = parseFloat(numMatch[1].replace(',', '.'));
+        } else {
+          for (const [word, val] of Object.entries(numWords)) {
+            if (before.endsWith(word) || before.includes(word + ' ') || before.startsWith(word + ' ')) { qty = val; break; }
+          }
+        }
+        // Check for grams anywhere in the item: "150g", "150 gr", "150 gr."
+        const gMatch = item.match(/(\d+)\s*gr?\.?\b/);
+        let factor;
+        if (gMatch) {
+          factor = parseInt(gMatch[1]) / 100;
+        } else {
+          factor = (food.g * qty) / 100;
+        }
+        p += food.p * factor; c += food.c * factor; f += food.f * factor;
+        found.push(qty > 1 ? `${qty}x ${match}` : (gMatch ? `${gMatch[1]}g ${match}` : match));
+      }
+    }
+    // If no ingredients found, try full dish match as fallback
+    if (!itemFound) {
+      for (const dish of Object.values(DISH_DB)) {
+        if (dish.keys.some(k => item.includes(k))) {
+          p += dish.p; c += dish.c; f += dish.f;
+          found.push(dish.keys[0]);
+          break;
         }
       }
-      // Also check for grams: "150g arroz" or "arroz 150g"
-      const gMatch = text.slice(Math.max(0, idx-15), idx+match.length+15).match(/(\d+)\s*g/);
-      let factor;
-      if (gMatch) {
-        factor = parseInt(gMatch[1]) / 100;
-      } else {
-        factor = (food.g * qty) / 100;
-      }
-      p += food.p * factor; c += food.c * factor; f += food.f * factor;
-      found.push(qty > 1 ? `${qty}x ${match}` : match);
     }
   }
 
