@@ -1989,7 +1989,7 @@ function registerDay() {
     </div>`;
 
   // Scroll to calendar
-  setTimeout(() => document.querySelector('.phase:last-of-type').scrollIntoView({ behavior:'smooth', block:'start' }), 600);
+  setTimeout(() => { const ph = document.querySelector('.phase:last-of-type'); if(ph) ph.scrollIntoView({ behavior:'smooth', block:'start' }); }, 600);
   } catch(e) {
     console.error('calcMorning error:', e);
     const rb = document.getElementById('resultMorning');
