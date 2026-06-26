@@ -413,6 +413,7 @@
   <div class="sub">Panel de Rendimiento · Ciclista Élite 47a</div>
 </header>
 <div class="date-bar" id="dateBar"></div>
+<div id="jsErrorBar" style="display:block;background:#7f1d1d;color:#fca5a5;font-size:12px;padding:6px 12px;text-align:center;"></div>
 
 <!-- ============================================================
      FASE MAÑANA
@@ -665,6 +666,10 @@
 <footer>Elite Cycling Coach · Datos personalizados @ 2.2 g/kg · 64 kg base</footer>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  const d = document.getElementById('jsErrorBar');
+  if (d) d.innerHTML = `❌ JS Error línea ${line}: ${msg}`;
+};
 // ========== COMPLETADO ==========
 function toggleDone(id) {
   const el = document.getElementById(id);
