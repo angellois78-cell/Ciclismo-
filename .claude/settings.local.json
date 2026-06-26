@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(base64 -i /tmp/logo_small.png | tr -d '\\\\n' > /tmp/logo_b64.txt && echo \"OK: $\\(wc -c < /tmp/logo_b64.txt\\) chars\")",
+      "Bash(python3 -c ' *)",
+      "Bash(git branch *)",
+      "Bash(git pull *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh auth *)"
+    ]
+  }
+}
