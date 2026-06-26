@@ -793,6 +793,7 @@ function estimateMacros(text) {
   }
 
   // Detect unrecognized words (potential foods)
+  const words = text.split(/[\s,;]+/).map(w => w.trim()).filter(w => w.length > 0);
   const knownWords = FOOD_DB.flatMap(fd => fd.k).concat(Object.values(DISH_DB).flatMap(d => d.keys));
   const skipWords = ['con','sin','de','la','el','los','las','un','una','y','al','a','en','poco','mucho','dos','tres','cuatro','cafe','café','solo','agua','sal','pimienta'];
   words.forEach(w => {
