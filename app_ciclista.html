@@ -490,8 +490,9 @@
       <h3>🍳 Desayuno <button class="done-btn" onclick="toggleDone('sec-breakfast')">✅ Hecho</button></h3>
       <div id="breakfastContent"></div>
       <div style="margin-top:14px;">
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">¿Qué has desayunado? Escríbelo y te digo si está bien:</label>
-        <textarea id="breakfastInput" placeholder="Ej: papilla con leche, plátano, whey y canela..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">¿Qué has desayunado? Escríbelo y te digo si está bien:</label>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💡 Puedes poner cantidades: <strong>3 tostadas</strong>, <strong>dos huevos</strong>, <strong>150g arroz</strong></div>
+        <textarea id="breakfastInput" placeholder="Ej: 3 tostadas con aguacate, 2 huevos, café solo..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
         <button onclick="validateMeal('breakfast')" style="margin-top:8px;width:100%;background:var(--accent);border:none;border-radius:10px;color:#fff;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">🔍 Validar desayuno</button>
         <div id="breakfastFeedback" style="margin-top:10px;"></div>
       </div>
@@ -509,8 +510,9 @@
       <h3>🍽 Comida del Mediodía <button class="done-btn" onclick="toggleDone('sec-protein')">✅ Hecho</button></h3>
       <div id="proteinContent"></div>
       <div style="margin-top:14px;">
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">¿Qué has comido? Escríbelo y te digo si está bien:</label>
-        <textarea id="lunchInput" placeholder="Ej: arroz con pollo y ensalada..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">¿Qué has comido? Escríbelo y te digo si está bien:</label>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💡 Puedes poner cantidades: <strong>potaje</strong>, <strong>200g arroz con pollo</strong>, <strong>dos filetes</strong></div>
+        <textarea id="lunchInput" placeholder="Ej: potaje, 200g arroz con pollo, ensalada..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
         <button onclick="validateMeal('lunch')" style="margin-top:8px;width:100%;background:var(--accent);border:none;border-radius:10px;color:#fff;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">🔍 Validar comida</button>
         <div id="lunchFeedback" style="margin-top:10px;"></div>
       </div>
@@ -521,8 +523,9 @@
       <h3>🍎 Merienda <button class="done-btn" onclick="toggleDone('sec-snacks')">✅ Hecho</button></h3>
       <div id="snackContent"></div>
       <div style="margin-top:14px;">
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">¿Qué has merendado? Escríbelo y te digo si está bien:</label>
-        <textarea id="snackInput" placeholder="Ej: batido de leche con avena, whey y cacao..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">¿Qué has merendado? Escríbelo y te digo si está bien:</label>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💡 Puedes poner cantidades: <strong>batido de whey</strong>, <strong>2 yogures</strong>, <strong>un plátano</strong></div>
+        <textarea id="snackInput" placeholder="Ej: batido de whey, 2 yogures, un plátano..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
         <button onclick="validateMeal('snack')" style="margin-top:8px;width:100%;background:var(--accent);border:none;border-radius:10px;color:#fff;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">🔍 Validar merienda</button>
         <div id="snackFeedback" style="margin-top:10px;"></div>
       </div>
@@ -539,8 +542,9 @@
       <h3>🌙 Cena y Protocolo Nocturno <button class="done-btn" onclick="toggleDone('sec-night')">✅ Hecho</button></h3>
       <div id="nightProtocol"></div>
       <div style="margin-top:14px;">
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">¿Qué has cenado? Escríbelo y te digo si está bien:</label>
-        <textarea id="dinnerInput" placeholder="Ej: merluza al horno con verduras y arroz..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">¿Qué has cenado? Escríbelo y te digo si está bien:</label>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">💡 Puedes poner cantidades: <strong>merluza</strong>, <strong>2 filetes de pollo</strong>, <strong>150g pasta</strong></div>
+        <textarea id="dinnerInput" placeholder="Ej: merluza, ensalada, 2 tostadas con queso..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px;font-size:13px;resize:none;height:70px;font-family:inherit;"></textarea>
         <button onclick="validateMeal('dinner')" style="margin-top:8px;width:100%;background:var(--accent);border:none;border-radius:10px;color:#fff;padding:10px;font-size:13px;font-weight:600;cursor:pointer;">🔍 Validar cena</button>
         <div id="dinnerFeedback" style="margin-top:10px;"></div>
       </div>
@@ -769,18 +773,18 @@ function estimateMacros(text) {
     if (match) {
       // Look for a number or word-number before the ingredient
       const idx = text.indexOf(match);
-      const before = text.slice(Math.max(0, idx - 15), idx).trim();
+      const before = text.slice(Math.max(0, idx - 25), idx).trim();
       let qty = 1;
       const numMatch = before.match(/(\d+(?:[.,]\d+)?)\s*$/);
       if (numMatch) {
         qty = parseFloat(numMatch[1].replace(',', '.'));
       } else {
         for (const [word, val] of Object.entries(numWords)) {
-          if (before.endsWith(word) || before.includes(word + ' ')) { qty = val; break; }
+          if (before.endsWith(word) || before.includes(word + ' ') || before.startsWith(word + ' ')) { qty = val; break; }
         }
       }
       // Also check for grams: "150g arroz" or "arroz 150g"
-      const gMatch = text.slice(Math.max(0, idx-10), idx+match.length+10).match(/(\d+)\s*g/);
+      const gMatch = text.slice(Math.max(0, idx-15), idx+match.length+15).match(/(\d+)\s*g/);
       let factor;
       if (gMatch) {
         factor = parseInt(gMatch[1]) / 100;
